@@ -6,24 +6,21 @@ import java.nio.ByteBuffer;
 public class RC5Coder16Bit implements IRC5Coder {
 
     private static final int WORD_SIZE = 16; // w
-    private static final int DEFAULT_ROUNDS_COUNT = 12; // r
+    private static final int DEFAULT_ROUNDS_COUNT = 16; // r
 
-    private final byte[] key;
     private final int roundsCount;
     private short[] S;
 
-    public RC5Coder16Bit(byte[] key, int roundsCount) {
-        this.key = key;
+    public RC5Coder16Bit(int roundsCount) {
         this.roundsCount = roundsCount;
-
-        createSubkeys();
     }
 
-    public RC5Coder16Bit(byte[] key) {
-        this(key, DEFAULT_ROUNDS_COUNT);
+    public RC5Coder16Bit() {
+        this(DEFAULT_ROUNDS_COUNT);
     }
 
-    private void createSubkeys() {
+    @Override
+    public void createSubkeys(byte[] key) {
         // Transform key to L array
         int c = Math.max(1, key.length / (WORD_SIZE / 8));
         short[] L = new short[c];
