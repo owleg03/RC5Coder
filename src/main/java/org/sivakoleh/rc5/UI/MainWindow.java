@@ -123,7 +123,7 @@ public class MainWindow {
         @Override
         public void actionPerformed(ActionEvent e) {
             byte[] dataEncrypted = rc5CoderCBCPadWrapper.encrypt(data, key, initializationVector);
-            fileHelper.writeAsText(dataEncrypted, "./data/dataEncrypted.txt");
+            fileHelper.write(dataEncrypted, "./data/dataEncrypted.txt");
         }
     }
 
@@ -131,7 +131,7 @@ public class MainWindow {
         @Override
         public void actionPerformed(ActionEvent e) {
             byte[] dataDecrypted = rc5CoderCBCPadWrapper.decrypt(data, key, initializationVector);
-            fileHelper.writeAsText(dataDecrypted, "./data/dataDecrypted.txt");
+            fileHelper.write(dataDecrypted, "./data/dataDecrypted.txt");
         }
     }
 }

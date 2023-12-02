@@ -2,26 +2,37 @@ package org.sivakoleh.rc5.logic;
 
 import org.sivakoleh.rc5.logic.rc5variations.IRC5Coder;
 
+import java.io.PrintStream;
+
 public class RC5CoderCBCPadWrapper {
     private final IRC5Coder rc5Coder;
     private final int blockSize;
+    private final PrintStream logPrintStream;
 
-    public RC5CoderCBCPadWrapper(IRC5Coder rc5Coder, int blockSize) {
+    public RC5CoderCBCPadWrapper(IRC5Coder rc5Coder, int blockSize, PrintStream logPrintStream) {
         this.rc5Coder = rc5Coder;
         this.blockSize = blockSize;
+        this.logPrintStream = logPrintStream;
     }
 
     public byte[] encrypt(byte[] data, byte[] key, byte[] initializationVector) {
         int blocksCount = (int) Math.ceil((double) data.length / blockSize);
-        byte[] result = new byte[blocksCount * blockSize];
+        if (data.length % blockSize == 0) {
+            ++blocksCount;
+        }
+        byte[] encryptionResult = new byte[blocksCount * blockSize];
         byte[] previousBlock = initializationVector.clone();
+
+        logPrintStream.println("Encrypting..");
 
         rc5Coder.createSubkeys(key);
 
         for (int i = 0; i < blocksCount; ++i) {
             byte[] block = new byte[blockSize];
             int blockLength = Math.min(blockSize, data.length - i * blockSize);
+            blockLength = Math.max(blockLength, 0);
             System.arraycopy(data, i * blockSize, block, 0, blockLength);
+
             if (blockLength < blockSize) {
                 padBlock(block, blockLength);
             }
@@ -32,17 +43,27 @@ public class RC5CoderCBCPadWrapper {
 
             byte[] blockEncrypted = rc5Coder.encrypt(block);
 
-            System.arraycopy(blockEncrypted, 0, result, i * blockSize, blockSize);
+            System.arraycopy(blockEncrypted, 0, encryptionResult, i * blockSize, blockSize);
             System.arraycopy(blockEncrypted, 0, previousBlock, 0, blockSize);
         }
 
-        return result;
+        logPrintStream.println("Encrypted!");
+
+        return encryptionResult;
     }
 
     public byte[] decrypt(byte[] dataEncrypted, byte[] key, byte[] initializationVector) {
         int blocksCount = (int) Math.ceil((double) dataEncrypted.length / blockSize);
-        byte[] result = new byte[blocksCount * blockSize];
+        int decryptedLength = blocksCount * blockSize;
+        byte[] decryptionResult = new byte[decryptedLength];
         byte[] previousBlock = initializationVector.clone();
+
+        logPrintStream.println("Decrypting..");
+
+        if (dataEncrypted.length == 0) {
+            logPrintStream.println("Decrypted!");
+            return new byte[0];
+        }
 
         rc5Coder.createSubkeys(key);
 
@@ -56,17 +77,25 @@ public class RC5CoderCBCPadWrapper {
                 decryptedBlock[j] ^= previousBlock[j];
             }
 
-            System.arraycopy(decryptedBlock, 0, result, i * blockSize, blockSize);
+            System.arraycopy(decryptedBlock, 0, decryptionResult, i * blockSize, blockSize);
             System.arraycopy(dataEncrypted, i * blockSize, previousBlock, 0, blockSize);
         }
 
-        return result;
+        // Crop the padding
+        int paddingLength = decryptionResult[decryptedLength - 1];
+        int dataLength = decryptedLength - paddingLength;
+        byte[] data = new byte[dataLength];
+        System.arraycopy(decryptionResult, 0, data, 0, dataLength);
+
+        System.out.println("Decrypted!");
+
+        return data;
     }
 
     private void padBlock(byte[] block, int actualLength) {
-        block[actualLength] = (byte) 0x80;
-        for (int i = actualLength + 1; i < blockSize; ++i) {
-            block[i] = 0x00;
+        byte paddingLength = (byte) (blockSize - actualLength);
+        for (int i = actualLength; i < blockSize; ++i) {
+            block[i] = paddingLength;
         }
     }
 }

@@ -11,42 +11,45 @@ import java.security.SecureRandom;
 public class Main {
 
     // Algorithm parameters
-    private static int wordSize = 64;
-    private static int roundsCount = 16;
-    private static int blockSize = wordSize * 2 / 8;
+    private static final int WORD_SIZE = 16;
+    private static final int ROUNDS_COUNT = 16;
+    private static final int BLOCK_SIZE = WORD_SIZE * 2 / 8;
 
     public static void main(String[] args) {
-//        IRC5Coder rc5Coder = new RC5CoderFactory().createRC5Coder(roundsCount, wordSize);
-//        MainWindow mainWindow = new MainWindow(new RC5CoderCBCPadWrapper(rc5Coder, blockSize), new FileHelper());
-//        mainWindow.show();
+        IRC5Coder rc5Coder = new RC5CoderFactory().createRC5Coder(ROUNDS_COUNT, WORD_SIZE);
+        MainWindow mainWindow = new MainWindow(
+                new RC5CoderCBCPadWrapper(rc5Coder, BLOCK_SIZE, System.out),
+                new FileHelper());
+        mainWindow.show();
 
         consoleRC5Demo();
     }
 
     private static void consoleRC5Demo() {
         // Data for encryption
-        byte[] key = "mysecretkey12345".getBytes();
-        byte[] data = "mlmo[no i ib ip ibk; m;,bkjbkbjkjbpkjbpkjbkn jhvgchglhk".getBytes();
+        byte[] key = "Birds are cool!!".getBytes();
+        byte[] data = "abcdefghi".getBytes();
 
         RC5CoderFactory rc5CoderFactory = new RC5CoderFactory();
-        IRC5Coder rc5Coder = rc5CoderFactory.createRC5Coder(roundsCount, wordSize);
+        IRC5Coder rc5Coder = rc5CoderFactory.createRC5Coder(ROUNDS_COUNT, WORD_SIZE);
         RC5CoderCBCPadWrapper rc5CoderCBCPadWrapper = new RC5CoderCBCPadWrapper(
                 rc5Coder,
-                blockSize
-        );
+                BLOCK_SIZE,
+                System.out);
 
-        byte[] initializationVector = generateRandomIV(blockSize);
+        byte[] initializationVector = generateRandomIV();
         byte[] dataEncrypted = rc5CoderCBCPadWrapper.encrypt(data, key, initializationVector);
         byte[] dataDecrypted = rc5CoderCBCPadWrapper.decrypt(dataEncrypted, key, initializationVector);
 
-        System.out.println("Data: " + new String(data));
+        System.out.println("\nData: " + new String(data));
         System.out.println("Encrypted data: " + new String(dataEncrypted));
         System.out.println("Decrypted data: " + new String(dataDecrypted));
+        System.out.println("\nLOG:");
     }
 
-    private static byte[] generateRandomIV(int blockSize) {
+    private static byte[] generateRandomIV() {
         SecureRandom random = new SecureRandom();
-        byte[] initializationVector = new byte[blockSize];
+        byte[] initializationVector = new byte[BLOCK_SIZE];
         random.nextBytes(initializationVector);
 
         return initializationVector;
