@@ -1,6 +1,8 @@
 package org.sivakoleh.rc5.UI;
 
 import org.sivakoleh.rc5.IO.FileHelper;
+import org.sivakoleh.rc5.logic.DataGenerator;
+import org.sivakoleh.rc5.logic.KeySize;
 import org.sivakoleh.rc5.logic.RC5CoderCBCPadWrapper;
 
 import javax.swing.*;
@@ -12,28 +14,34 @@ import java.io.PrintStream;
 
 public class MainWindow {
     private final RC5CoderCBCPadWrapper rc5CoderCBCPadWrapper;
+    private final KeySize keySize;
+    private final DataGenerator dataGenerator;
     private final FileHelper fileHelper;
 
     // States
     private byte[] data;
-    private byte[] key;
-    private byte[] initializationVector;
 
     // UI components
     private final JFrame jFrame;
     private JPanel jPanel;
     private JButton jChooseDataFileButton;
-    private JButton jChooseKeyFileButton;
-    private JButton jChooseIVFileButton;
+    private JTextField jInputKeyPhraseTextField;
     private JButton jEncryptButton;
     private JButton jDecryptButton;
 
     // Static fields
-    private static final int windowHeight = 300;
-    private static final int windowWidth = 900;
+    private static final int windowHeight = 200;
+    private static final int windowWidth = 700;
 
-    public MainWindow(RC5CoderCBCPadWrapper rc5CoderCBCPadWrapper, FileHelper fileHelper) {
+    public MainWindow(
+            RC5CoderCBCPadWrapper rc5CoderCBCPadWrapper,
+            KeySize keySize,
+            DataGenerator dataGenerator,
+            FileHelper fileHelper) {
+
         this.rc5CoderCBCPadWrapper = rc5CoderCBCPadWrapper;
+        this.keySize = keySize;
+        this.dataGenerator = dataGenerator;
         this.fileHelper = fileHelper;
 
         jFrame = new JFrame("MD5 Hasher");
@@ -47,20 +55,15 @@ public class MainWindow {
     }
 
     private void initComponents() {
-        jPanel = new JPanel(new GridLayout(0, 3, 20, 20));
+        jPanel = new JPanel(new GridLayout(0, 2, 20, 20));
         jPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
 
         jChooseDataFileButton = new JButton("Choose data file");
-        jChooseDataFileButton.addActionListener(new ChooseFileButtonActionListener(FileDestination.DATA, System.out));
+        jChooseDataFileButton.addActionListener(new ChooseDataFileButtonActionListener(System.out));
         jPanel.add(jChooseDataFileButton);
 
-        jChooseKeyFileButton = new JButton("Choose key file");
-        jChooseKeyFileButton.addActionListener(new ChooseFileButtonActionListener(FileDestination.KEY, System.out));
-        jPanel.add(jChooseKeyFileButton);
-
-        jChooseIVFileButton = new JButton("Choose IV file");
-        jChooseIVFileButton.addActionListener(new ChooseFileButtonActionListener(FileDestination.IV, System.out));
-        jPanel.add(jChooseIVFileButton);
+        jInputKeyPhraseTextField = new JTextField("Input key..");
+        jPanel.add(jInputKeyPhraseTextField);
 
         jEncryptButton = new JButton("Encrypt data");
         jEncryptButton.addActionListener(new EncryptButtonActionListener());
@@ -73,16 +76,11 @@ public class MainWindow {
         jFrame.add(jPanel, BorderLayout.CENTER);
     }
 
-    private enum FileDestination { DATA, KEY, IV }
-
-    private class ChooseFileButtonActionListener implements ActionListener {
-
-        private final FileDestination fileDestination;
+    private class ChooseDataFileButtonActionListener implements ActionListener {
         private final JFileChooser jFileChooser;
         private final PrintStream log;
 
-        public ChooseFileButtonActionListener(FileDestination fileDestination, PrintStream log) {
-            this.fileDestination = fileDestination;
+        public ChooseDataFileButtonActionListener(PrintStream log) {
             this.jFileChooser = new JFileChooser("./data");
             this.log = log;
         }
@@ -95,13 +93,7 @@ public class MainWindow {
                 return;
             }
 
-            byte[] bytes = fileHelper.readBytes(file);
-
-            switch (fileDestination) {
-                case DATA -> data = bytes;
-                case KEY -> key = bytes;
-                case IV -> initializationVector = bytes;
-            }
+            data = fileHelper.readBytes(file);
         }
 
         private File getChosenFile() {
@@ -122,6 +114,13 @@ public class MainWindow {
     private class EncryptButtonActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
+            // Key
+            String keyPhrase = jInputKeyPhraseTextField.getText();
+            byte[] key = dataGenerator.generateKey(keyPhrase, keySize);
+
+            // IV
+            int blockSize = rc5CoderCBCPadWrapper.getBlockSize();
+            byte[] initializationVector = dataGenerator.generateInitializationVector(blockSize);
             byte[] dataEncrypted = rc5CoderCBCPadWrapper.encrypt(data, key, initializationVector);
             fileHelper.write(dataEncrypted, "./data/dataEncrypted.txt");
         }
@@ -130,6 +129,10 @@ public class MainWindow {
     private class DecryptButtonActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
+            // Key
+            String keyPhrase = jInputKeyPhraseTextField.getText();
+            byte[] key = dataGenerator.generateKey(keyPhrase, keySize);
+
             byte[] dataDecrypted = rc5CoderCBCPadWrapper.decrypt(data, key);
             fileHelper.write(dataDecrypted, "./data/dataDecrypted.txt");
         }

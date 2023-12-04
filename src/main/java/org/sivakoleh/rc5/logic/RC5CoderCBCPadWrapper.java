@@ -15,6 +15,10 @@ public class RC5CoderCBCPadWrapper {
         this.logPrintStream = logPrintStream;
     }
 
+    public int getBlockSize() {
+        return blockSize;
+    }
+
     public byte[] encrypt(byte[] data, byte[] key, byte[] initializationVector) {
         logPrintStream.println("Encrypting..");
 
