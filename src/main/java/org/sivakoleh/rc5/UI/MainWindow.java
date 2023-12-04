@@ -130,7 +130,7 @@ public class MainWindow {
     private class DecryptButtonActionListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            byte[] dataDecrypted = rc5CoderCBCPadWrapper.decrypt(data, key, initializationVector);
+            byte[] dataDecrypted = rc5CoderCBCPadWrapper.decrypt(data, key);
             fileHelper.write(dataDecrypted, "./data/dataDecrypted.txt");
         }
     }

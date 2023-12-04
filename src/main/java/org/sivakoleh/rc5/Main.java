@@ -28,7 +28,7 @@ public class Main {
     private static void consoleRC5Demo() {
         // Data for encryption
         byte[] key = "Birds are cool!!".getBytes();
-        byte[] data = "abcdefghi".getBytes();
+        byte[] data = "This is a console demo of RC5".getBytes();
 
         RC5CoderFactory rc5CoderFactory = new RC5CoderFactory();
         IRC5Coder rc5Coder = rc5CoderFactory.createRC5Coder(ROUNDS_COUNT, WORD_SIZE);
@@ -39,7 +39,7 @@ public class Main {
 
         byte[] initializationVector = generateRandomIV();
         byte[] dataEncrypted = rc5CoderCBCPadWrapper.encrypt(data, key, initializationVector);
-        byte[] dataDecrypted = rc5CoderCBCPadWrapper.decrypt(dataEncrypted, key, initializationVector);
+        byte[] dataDecrypted = rc5CoderCBCPadWrapper.decrypt(dataEncrypted, key);
 
         System.out.println("\nData: " + new String(data));
         System.out.println("Encrypted data: " + new String(dataEncrypted));
