@@ -12,8 +12,8 @@ public class Main {
 
     // RC5 parameters
     private static final int RC5_WORD_SIZE = 16;
-    private static final int RC5_ROUNDS_COUNT = 20;
-    private static final KeySize KEY_SIZE = KeySize.KEY_SIZE_8B;
+    private static final int RC5_ROUNDS_COUNT = 16;
+    private static final KeySize KEY_SIZE = KeySize.KEY_SIZE_32B;
     private static final int RC5_BLOCK_SIZE = RC5_WORD_SIZE * 2 / 8;
 
     // Pseudorandom generator parameters

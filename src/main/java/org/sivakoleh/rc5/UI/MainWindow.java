@@ -11,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.io.PrintStream;
+import org.apache.commons.lang3.time.StopWatch;
 
 public class MainWindow {
     private final RC5CoderCBCPadWrapper rc5CoderCBCPadWrapper;
@@ -66,11 +67,11 @@ public class MainWindow {
         jPanel.add(jInputKeyPhraseTextField);
 
         jEncryptButton = new JButton("Encrypt data");
-        jEncryptButton.addActionListener(new EncryptButtonActionListener());
+        jEncryptButton.addActionListener(new EncryptButtonActionListener(System.out));
         jPanel.add(jEncryptButton);
 
         jDecryptButton = new JButton("Decrypt data");
-        jDecryptButton.addActionListener(new DecryptButtonActionListener());
+        jDecryptButton.addActionListener(new DecryptButtonActionListener(System.out));
         jPanel.add(jDecryptButton);
 
         jFrame.add(jPanel, BorderLayout.CENTER);
@@ -112,8 +113,19 @@ public class MainWindow {
     }
 
     private class EncryptButtonActionListener implements ActionListener {
+        private final PrintStream log;
+        private final StopWatch stopWatch;
+
+        public EncryptButtonActionListener(PrintStream log) {
+            this.log = log;
+            this.stopWatch = new StopWatch();
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
+            log.println("Starting timer..");
+            stopWatch.start();
+
             // Key
             String keyPhrase = jInputKeyPhraseTextField.getText();
             byte[] key = dataGenerator.generateKey(keyPhrase, keySize);
@@ -121,20 +133,38 @@ public class MainWindow {
             // IV
             int blockSize = rc5CoderCBCPadWrapper.getBlockSize();
             byte[] initializationVector = dataGenerator.generateInitializationVector(blockSize);
+
             byte[] dataEncrypted = rc5CoderCBCPadWrapper.encrypt(data, key, initializationVector);
             fileHelper.write(dataEncrypted, "./data/dataEncrypted.txt");
+
+            stopWatch.stop();
+            log.println("Time elapsed: " + stopWatch);
         }
     }
 
     private class DecryptButtonActionListener implements ActionListener {
+        private final PrintStream log;
+        private final StopWatch stopWatch;
+
+        public DecryptButtonActionListener(PrintStream log) {
+            this.log = log;
+            this.stopWatch = new StopWatch();
+        }
+
         @Override
         public void actionPerformed(ActionEvent e) {
+            log.println("Starting timer..");
+            stopWatch.start();
+
             // Key
             String keyPhrase = jInputKeyPhraseTextField.getText();
             byte[] key = dataGenerator.generateKey(keyPhrase, keySize);
 
             byte[] dataDecrypted = rc5CoderCBCPadWrapper.decrypt(data, key);
             fileHelper.write(dataDecrypted, "./data/dataDecrypted.txt");
+
+            stopWatch.stop();
+            log.println("Time elapsed: " + stopWatch);
         }
     }
 }
